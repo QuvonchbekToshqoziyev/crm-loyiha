@@ -1,0 +1,205 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id         Int      @id @default(autoincrement())
+  phone      String   @unique
+  password   String
+  role       Role     @default(STUDENT)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  status     Status   @default(active)
+  username   String   @unique
+  first_name String
+  last_name  String
+  photo      String?
+  lessons    Lesson[]
+  student    Student?
+  teacher    Teacher?
+
+  admins Admin[]
+}
+
+model Teacher {
+  id         Int                    @id @default(autoincrement())
+  subject    String?
+  created_at DateTime               @default(now())
+  updated_at DateTime               @updatedAt
+  user_id    Int                    @unique
+  grades     GradeStudentHomework[]
+  groups     Group[]
+  lessons    Lesson[]
+  user       User                   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model Admin {
+  id           Int      @id @default(autoincrement())
+  role         Role     @default(ADMIN)
+  admin_status Status
+  user_id    Int                    @unique
+
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+  user       User                   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+}
+
+model Student {
+  id            Int                         @id @default(autoincrement())
+  created_at    DateTime                    @default(now())
+  updated_at    DateTime                    @updatedAt
+  user_id       Int                         @unique
+  attendances   Attendance[]
+  groupStudents GroupStudent[]
+  user          User                        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  submissions   StudentHomeworkSubmission[]
+}
+
+model Room {
+  id         Int      @id @default(autoincrement())
+  name       String   @unique
+  capacity   Int?
+  status     Status   @default(active)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  groups     Group[]
+}
+
+model Group {
+  id            Int            @id @default(autoincrement())
+  name          String         @unique
+  status        Status         @default(active)
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+  course_id     Int
+  teacher_id    Int
+  room_id       Int?
+  course        Course         @relation(fields: [course_id], references: [id])
+  room          Room?          @relation(fields: [room_id], references: [id])
+  teacher       Teacher        @relation(fields: [teacher_id], references: [id])
+  groupStudents GroupStudent[]
+  lessons       Lesson[]
+}
+
+model GroupStudent {
+  id         Int      @id @default(autoincrement())
+  group_id   Int
+  student_id Int
+  created_at DateTime @default(now())
+  group      Group    @relation(fields: [group_id], references: [id], onDelete: Cascade)
+  student    Student  @relation(fields: [student_id], references: [id], onDelete: Cascade)
+
+  @@unique([group_id, student_id])
+}
+
+model Course {
+  id             Int         @id @default(autoincrement())
+  name           String      @unique
+  description    String?
+  price          Decimal
+  duration_month Int
+  duration_hours Int
+  level          CourseLevel
+  status         Status      @default(active)
+  created_at     DateTime    @default(now())
+  updated_at     DateTime    @updatedAt
+  groups         Group[]
+}
+
+model Lesson {
+  id          Int          @id @default(autoincrement())
+  topic       String
+  description String?
+  status      Status       @default(active)
+  created_at  DateTime     @default(now())
+  updated_at  DateTime     @updatedAt
+  group_id    Int
+  teacher_id  Int?
+  user_id     Int?
+  attendances Attendance[]
+  homeworks   Homework[]
+  group       Group        @relation(fields: [group_id], references: [id])
+  teacher     Teacher?     @relation(fields: [teacher_id], references: [id])
+  user        User?        @relation(fields: [user_id], references: [id])
+}
+
+model Attendance {
+  id         Int      @id @default(autoincrement())
+  attended   Boolean  @default(false)
+  status     Status   @default(active)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  lesson_id  Int
+  student_id Int
+  late       Boolean?
+  lesson     Lesson   @relation(fields: [lesson_id], references: [id], onDelete: Cascade)
+  student    Student  @relation(fields: [student_id], references: [id], onDelete: Cascade)
+
+  @@unique([lesson_id, student_id])
+}
+
+model Homework {
+  id          Int                         @id @default(autoincrement())
+  title       String
+  description String?
+  due_date    DateTime?
+  status      Status                      @default(active)
+  created_at  DateTime                    @default(now())
+  updated_at  DateTime                    @updatedAt
+  lesson_id   Int
+  lesson      Lesson                      @relation(fields: [lesson_id], references: [id], onDelete: Cascade)
+  submissions StudentHomeworkSubmission[]
+}
+
+model StudentHomeworkSubmission {
+  id           Int                   @id @default(autoincrement())
+  content      String?
+  file_url     String?
+  submitted_at DateTime              @default(now())
+  status       Status                @default(active)
+  created_at   DateTime              @default(now())
+  updated_at   DateTime              @updatedAt
+  homework_id  Int
+  student_id   Int
+  grade        GradeStudentHomework?
+  homework     Homework              @relation(fields: [homework_id], references: [id], onDelete: Cascade)
+  student      Student               @relation(fields: [student_id], references: [id], onDelete: Cascade)
+
+  @@unique([homework_id, student_id])
+}
+
+model GradeStudentHomework {
+  id            Int                       @id @default(autoincrement())
+  grade         Decimal
+  comment       String?
+  created_at    DateTime                  @default(now())
+  updated_at    DateTime                  @updatedAt
+  submission_id Int                       @unique
+  graded_by_id  Int
+  graded_by     Teacher                   @relation(fields: [graded_by_id], references: [id])
+  submission    StudentHomeworkSubmission @relation(fields: [submission_id], references: [id], onDelete: Cascade)
+}
+
+enum Role {
+  SUPERADMIN
+  ADMIN
+  TEACHER
+  STUDENT
+}
+
+enum Status {
+  active
+  inactive
+  freeze
+}
+
+enum CourseLevel {
+  beginner
+  intermediate
+  advanced
+}
