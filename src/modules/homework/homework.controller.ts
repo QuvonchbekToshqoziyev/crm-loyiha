@@ -21,11 +21,19 @@ export class HomeworkController {
   @Roles(Role.ADMIN, Role.SUPERADMIN, Role.TEACHER, Role.STUDENT)
   @ApiOperation({
     summary: 'List all homework',
-    description: 'Retrieve all homework assignments with lesson details',
+    description: 'Retrieve all homework assignments with lesson details. Supports optional pagination.',
   })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (starts from 1)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Number of items per page' })
   @ApiResponse({ status: 200, description: 'List of all homework retrieved successfully' })
-  findAll() {
-    return this.homeworkService.findAll();
+  findAll(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.homeworkService.findAll(
+      page ? +page : undefined,
+      limit ? +limit : undefined,
+    );
   }
 
   @Get('search/by-title')

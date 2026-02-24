@@ -70,6 +70,6 @@ export class CoursesService {
       this.prisma.course.findUnique({ where: { id } }),
       'Course',
     );
-    return this.prisma.course.delete({ where: { id }, select: { id: true } });
+    return this.prisma.course.update({ where: { id }, data: { status: 'inactive' }, select: COURSE_LIST_SELECT });
   }
 }

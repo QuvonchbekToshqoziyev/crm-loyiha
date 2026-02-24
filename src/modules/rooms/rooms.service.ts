@@ -63,6 +63,6 @@ export class RoomsService {
       this.prisma.room.findUnique({ where: { id } }),
       'Room',
     );
-    return this.prisma.room.delete({ where: { id }, select: { id: true } });
+    return this.prisma.room.update({ where: { id }, data: { status: 'inactive' }, select: ROOM_LIST_SELECT });
   }
 }

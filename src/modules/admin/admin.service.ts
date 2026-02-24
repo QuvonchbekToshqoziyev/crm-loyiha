@@ -86,6 +86,6 @@ export class AdminService {
       this.prisma.admin.findUnique({ where: { id } }),
       'Admin',
     );
-    return this.prisma.admin.delete({ where: { id }, select: { id: true } });
+    return this.prisma.admin.update({ where: { id }, data: { admin_status: 'inactive' }, select: ADMIN_LIST_SELECT });
   }
 }

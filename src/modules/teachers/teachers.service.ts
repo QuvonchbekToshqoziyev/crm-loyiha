@@ -82,6 +82,6 @@ export class TeachersService {
       this.prisma.teacher.findUnique({ where: { id } }),
       'Teacher',
     );
-    return this.prisma.teacher.delete({ where: { id }, select: { id: true } });
+    return this.prisma.teacher.update({ where: { id }, data: { user: { update: { status: 'inactive' } } }, select: TEACHER_LIST_SELECT });
   }
 }

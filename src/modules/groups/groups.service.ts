@@ -111,6 +111,6 @@ export class GroupsService {
       this.prisma.group.findUnique({ where: { id } }),
       'Group',
     );
-    return this.prisma.group.delete({ where: { id }, select: { id: true } });
+    return this.prisma.group.update({ where: { id }, data: { status: 'inactive' }, select: GROUP_LIST_SELECT });
   }
 }

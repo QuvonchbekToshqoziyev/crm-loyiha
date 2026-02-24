@@ -21,11 +21,19 @@ export class LessonController {
   @Roles(Role.ADMIN, Role.SUPERADMIN, Role.TEACHER, Role.STUDENT)
   @ApiOperation({
     summary: 'List all lessons',
-    description: 'Retrieve all lessons with group and teacher details',
+    description: 'Retrieve all lessons with group and teacher details. Supports optional pagination.',
   })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (starts from 1)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Number of items per page' })
   @ApiResponse({ status: 200, description: 'List of all lessons retrieved successfully' })
-  findAll() {
-    return this.lessonService.findAll();
+  findAll(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.lessonService.findAll(
+      page ? +page : undefined,
+      limit ? +limit : undefined,
+    );
   }
 
   @Get('search/by-topic')

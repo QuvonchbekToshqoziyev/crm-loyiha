@@ -21,11 +21,19 @@ export class StudentsController {
   @Roles(Role.ADMIN, Role.SUPERADMIN, Role.TEACHER, Role.STUDENT)
   @ApiOperation({ 
     summary: 'List all students', 
-    description: 'Retrieve all students with their user details and group enrollments' 
+    description: 'Retrieve all students with their user details and group enrollments. Supports optional pagination.' 
   })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (starts from 1)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Number of items per page' })
   @ApiResponse({ status: 200, description: 'List of all students retrieved successfully' })
-  findAll() {
-    return this.studentsService.findAll();
+  findAll(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.studentsService.findAll(
+      page ? +page : undefined,
+      limit ? +limit : undefined,
+    );
   }
 
   @Get('search/by-name')

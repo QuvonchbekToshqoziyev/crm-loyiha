@@ -27,8 +27,30 @@ const HOMEWORK_DETAIL_SELECT = {
 export class HomeworkService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll() {
-    return this.prisma.homework.findMany({ select: HOMEWORK_LIST_SELECT });
+  async findAll(page?: number, limit?: number) {
+    const query: any = { select: HOMEWORK_LIST_SELECT };
+
+    if (limit) {
+      query.take = limit;
+      if (page && page > 1) {
+        query.skip = (page - 1) * limit;
+      }
+    }
+
+    const [data, total] = await Promise.all([
+      this.prisma.homework.findMany(query),
+      this.prisma.homework.count(),
+    ]);
+
+    return {
+      data,
+      total,
+      ...(limit && {
+        page: page || 1,
+        limit,
+        lastPage: Math.ceil(total / limit),
+      }),
+    };
   }
 
   async findOne(id: number) {
@@ -94,6 +116,10 @@ export class HomeworkService {
       this.prisma.homework.findUnique({ where: { id } }),
       'Homework',
     );
-    return this.prisma.homework.delete({ where: { id }, select: { id: true } });
+    return this.prisma.homework.update({
+      where: { id },
+      data: { status: 'inactive' },
+      select: HOMEWORK_LIST_SELECT,
+    });
   }
 }

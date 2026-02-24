@@ -27,8 +27,30 @@ const LESSON_DETAIL_SELECT = {
 export class LessonService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll() {
-    return this.prisma.lesson.findMany({ select: LESSON_LIST_SELECT });
+  async findAll(page?: number, limit?: number) {
+    const query: any = { select: LESSON_LIST_SELECT };
+
+    if (limit) {
+      query.take = limit;
+      if (page && page > 1) {
+        query.skip = (page - 1) * limit;
+      }
+    }
+
+    const [data, total] = await Promise.all([
+      this.prisma.lesson.findMany(query),
+      this.prisma.lesson.count(),
+    ]);
+
+    return {
+      data,
+      total,
+      ...(limit && {
+        page: page || 1,
+        limit,
+        lastPage: Math.ceil(total / limit),
+      }),
+    };
   }
 
   async findOne(id: number) {
@@ -104,6 +126,6 @@ export class LessonService {
       this.prisma.lesson.findUnique({ where: { id } }),
       'Lesson',
     );
-    return this.prisma.lesson.delete({ where: { id }, select: { id: true } });
+    return this.prisma.lesson.update({ where: { id }, data: { status: 'inactive' }, select: LESSON_LIST_SELECT });
   }
 }

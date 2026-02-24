@@ -91,6 +91,6 @@ export class UsersService {
       this.prisma.user.findUnique({ where: { id } }),
       'User',
     );
-    return this.prisma.user.delete({ where: { id }, select: { id: true } });
+    return this.prisma.user.update({ where: { id }, data: { status: 'inactive' }, select: USER_SELECT_WITH_DATES });
   }
 }

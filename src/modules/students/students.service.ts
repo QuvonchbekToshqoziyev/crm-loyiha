@@ -21,8 +21,30 @@ const STUDENT_DETAIL_SELECT = {
 export class StudentsService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll() {
-    return this.prisma.student.findMany({ select: STUDENT_LIST_SELECT });
+  async findAll(page?: number, limit?: number) {
+    const query: any = { select: STUDENT_LIST_SELECT };
+
+    if (limit) {
+      query.take = limit;
+      if (page && page > 1) {
+        query.skip = (page - 1) * limit;
+      }
+    }
+
+    const [data, total] = await Promise.all([
+      this.prisma.student.findMany(query),
+      this.prisma.student.count(),
+    ]);
+
+    return {
+      data,
+      total,
+      ...(limit && {
+        page: page || 1,
+        limit,
+        lastPage: Math.ceil(total / limit),
+      }),
+    };
   }
 
   async findOne(id: number) {
@@ -86,6 +108,6 @@ export class StudentsService {
       this.prisma.student.findUnique({ where: { id } }),
       'Student',
     );
-    return this.prisma.student.delete({ where: { id }, select: { id: true } });
+    return this.prisma.student.update({ where: { id }, data: { user: { update: { status: 'inactive' } } }, select: STUDENT_LIST_SELECT });
   }
 }
